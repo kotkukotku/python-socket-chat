@@ -98,24 +98,14 @@ def receive(conn, addr):
     "type": "system",
     "text": f"{current_nick} bağlandı."
     }, conn)       
-
-    old_messages = database.get_last_messages(room=default_room)
-    if old_messages:
-        send_json(conn, {
-            "type":"system",
-            "text":"--GEÇMİŞ MESAJLAR--\n"
-        })
-        for sender, message, receiver, time, _ in old_messages:
-            send_json(conn, {
-                "type":"chat",
-                "text":f"[{time}] {sender}: {message}"
-            })
-        send_json(conn, {
-        "type": "system",
-        "text": "-----------------------",
-        })
+    
+    commands.send_room_history(conn, default_room)
     while True:
-        raw = f.readline()
+        try:
+            raw = f.readline().strip()
+        except (ConnectionResetError, ConnectionError, OSError):
+            raw = None
+        
         if not raw:
             nickname = get_nickname(conn)
             room_name = get_room(conn)
@@ -126,10 +116,6 @@ def receive(conn, addr):
                     "text": f"{nickname} ayrıldı.",
                 }, conn)
             break
-
-        raw = raw.strip()
-        if not raw:
-            continue
 
         try:
             data = json.loads(raw)

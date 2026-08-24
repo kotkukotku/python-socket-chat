@@ -2,6 +2,22 @@ from protocol import send_json
 import database
 
 DEFAULT_ROOM = "lobby"
+def send_room_history(conn, room_name):
+    old_messages = database.get_last_messages(limit=15, room=room_name)
+    if old_messages:
+        send_json(conn, {
+            "type": "system",
+            "text": f"\n-- #{room_name} GEÇMİŞ MESAJLARI --"
+        })
+        for sender, message, receiver, saat, room in old_messages:
+            send_json(conn, {
+                "type": "chat",
+                "text": f"[{saat}] [{room}] {sender}: {message}"
+            })
+        send_json(conn, {
+            "type": "system",
+            "text": "--------------------------------\n"
+        })
 
 def handle_nick(conn, new_name, nicknames, lock, broadcast):
     old_nickname = nicknames.get(conn)
@@ -124,6 +140,8 @@ def handle_join(conn, room_name, nicknames, rooms, client_rooms, lock, broadcast
         "type": "system",
         "text": f"#{new_room} odasına geçtiniz.\n",
     })
+
+    send_room_history(conn, new_room)
 def handle_room(conn, client_rooms, lock):
     with lock:
         room_name = client_rooms.get(conn, DEFAULT_ROOM)
@@ -168,7 +186,7 @@ def handle_leave(conn, nicknames, rooms, client_rooms, lock, broadcast_room):
         "type": "system",
         "text": f"#{DEFAULT_ROOM} odasına döndünüz.\n",
     })
-
+    send_room_history(conn, DEFAULT_ROOM)
 def handle_help(conn):
     help_text = (
         "\nKomutlar:\n"
