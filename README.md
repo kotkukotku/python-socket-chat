@@ -1,4 +1,7 @@
-![Project Logo](assets/logo.png)
+<p align="center">
+  <img src="assets/logo.png" alt="ErkChat Logo" width="250"/>
+</p>
+
 # ErkChat Programme
 
 ErkChat is a chat program built using Python's socket library.
